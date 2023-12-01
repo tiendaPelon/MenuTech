@@ -35,6 +35,7 @@ def borrar_datos():
     comandas_collection.delete_one(bus)
     print("Registro borrado")
 
+
     # Cerrar la conexión
     client.close()
 
@@ -83,3 +84,5 @@ def obtener_opcion(opcion):
 if _name_ == "_main_":
     menu()
     
+
+
