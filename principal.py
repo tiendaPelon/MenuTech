@@ -76,7 +76,7 @@ def obtener_numero_comanda():
     return numero_comanda
 
 def obtener_opcion(opcion):
-    # Solicitar la cantidad de la opción
+    # Solicitar la cantidad de la opcion
     cantidad = input(f"Ingrese la cantidad de {opcion}: ")
     return int(cantidad)
 
