@@ -66,6 +66,7 @@ def menu():
         print("1. Agregar Comanda")
         print("2. Borrar Comanda")
         print("3. Consultar Comandas")
+        print("4. Salir")
 
         opcion = input("Seleccione una opción: ")
 
@@ -82,6 +83,8 @@ def menu():
             hilo = threading.Thread(target=mostrar_datos, name=f'HiloConsultarComandas')
             hilo.start()
             hilo.join()
+        elif opcion == "4":
+            print("¡Gracias por utilizarlo, adiós:)!")
             break
         else:
             print("Opción no válida. Por favor, seleccione una opción válida.")
