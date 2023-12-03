@@ -22,6 +22,27 @@ def escribir_base_de_datos(hilo_id, num_comanda, barbacoa, quesadilla, bebida, c
     # Cerrar la conexión
     client.close()
 
+def mostrar_datos():
+    # Realizar la conexión a la base de datos
+    client = MongoClient("mongodb+srv://danielxp:maspormasDF1@cluster0.glu8e4r.mongodb.net/?retryWrites=true&w=majority")
+    db = client["danielxp88"]
+    comandas_collection = db["comandas"]
+
+    # Consultar y mostrar los datos de la colección "comandas"
+    print("-----------------")
+    print("Datos en la base de datos:")
+    for comanda in comandas_collection.find():
+        print("ID:", comanda["_id"])
+        print("Número de Comanda:", comanda["num_comanda"])
+        print("Barbacoa:", comanda["barbacoa"])
+        print("Quesadilla:", comanda["quesadilla"])
+        print("Bebida:", comanda["bebida"])
+        print("Consomé:", comanda["consome"])
+        print("")
+
+    # Cerrar la conexión
+    client.close()
+
 def borrar_datos():
     # Realizar la conexión a la base de datos
     client = MongoClient("mongodb+srv://danielxp:maspormasDF1@cluster0.glu8e4r.mongodb.net/?retryWrites=true&w=majority")
@@ -44,6 +65,7 @@ def menu():
         print("Menú de opciones:")
         print("1. Agregar Comanda")
         print("2. Borrar Comanda")
+        print("3. Consultar Comandas")
 
         opcion = input("Seleccione una opción: ")
 
@@ -54,6 +76,10 @@ def menu():
             hilo.join()
         elif opcion == "2":
             hilo = threading.Thread(target=borrar_datos, name=f'HiloBorrarComanda')
+            hilo.start()
+            hilo.join()
+        elif opcion == "3":
+            hilo = threading.Thread(target=mostrar_datos, name=f'HiloConsultarComandas')
             hilo.start()
             hilo.join()
             break
@@ -81,7 +107,7 @@ def obtener_opcion(opcion):
     cantidad = input(f"Ingrese la cantidad de {opcion}: ")
     return int(cantidad)
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     menu()
     
 
