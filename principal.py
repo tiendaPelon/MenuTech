@@ -1,145 +1,79 @@
 import threading
 from pymongo import MongoClient
-from bson import ObjectId
+from datetime import datetime, timedelta
+
+tiempos_comida = {
+    "barbacoa": 4,
+    "quesadilla": 3,
+    "bebida": 1,
+    "consome": 2
+}
+
+def obtener_tiempo_total(orden):
+    tiempo_total = 0
+    for comida, cantidad in orden.items():
+        tiempo_total += tiempos_comida[comida] * cantidad
+    return tiempo_total
 
 def escribir_base_de_datos(hilo_id, num_comanda, barbacoa, quesadilla, bebida, consome):
-    # Realizar la conexión a la base de datos
+    tiempo_pedido = obtener_tiempo_total({
+        "barbacoa": barbacoa,
+        "quesadilla": quesadilla,
+        "bebida": bebida,
+        "consome": consome
+    })
+
     client = MongoClient("mongodb+srv://danielxp:maspormasDF1@cluster0.glu8e4r.mongodb.net/?retryWrites=true&w=majority")
     db = client["danielxp88"]
     comandas_collection = db["comandas"]
 
-    # Insertar el valor en la base de datos
     comanda = {
         "num_comanda": num_comanda,
         "barbacoa": barbacoa,
         "quesadilla": quesadilla,
         "bebida": bebida,
         "consome": consome,
-        "completado": False if "completado" not in locals() else completado
+        "tiempo_pedido": tiempo_pedido
     }
     result = comandas_collection.insert_one(comanda)
     print(f"Hilo {hilo_id}: Comanda insertada con ID: {result.inserted_id}")
-
-    # Cerrar la conexión
+    print(f"El tiempo estimado de preparación para la Comanda {num_comanda} es de {tiempo_pedido} segundos.")
     client.close()
 
-
-def mostrar_datos_filtradas(opcion_filtrado):
-    # Realizar la conexión a la base de datos
+def mostrar_datos():
     client = MongoClient("mongodb+srv://danielxp:maspormasDF1@cluster0.glu8e4r.mongodb.net/?retryWrites=true&w=majority")
     db = client["danielxp88"]
     comandas_collection = db["comandas"]
 
-    # Consultar y mostrar los datos de la colección "comandas" según la opción de filtrado
-    print("-------------------------------------------------")
+    print("-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-")
     print("Datos en la base de datos:")
-
-    if opcion_filtrado == "1":
-        comandas = comandas_collection.find()
-    elif opcion_filtrado == "2":
-        comandas = comandas_collection.find({"completado": True})
-    elif opcion_filtrado == "3":
-        comandas = comandas_collection.find({"$or": [{"completado": False}, {"completado": {"$exists": False}}]})
-    else:
-        print("Opción no válida.")
-        client.close()
-        return
-
-    for comanda in comandas:
+    for comanda in comandas_collection.find():
         print("ID:", comanda["_id"])
         print("Número de Comanda:", comanda["num_comanda"])
         print("Barbacoa:", comanda["barbacoa"])
         print("Quesadilla:", comanda["quesadilla"])
         print("Bebida:", comanda["bebida"])
         print("Consomé:", comanda["consome"])
+        
+        tiempo_pedido = comanda.get("tiempo_pedido", None)
+        if tiempo_pedido is not None:
+            print(f"Tiempo estimado de preparación: {tiempo_pedido} segundos")
 
-        # Verificar si 'completado' está presente en el documento
-        completado = comanda.get("completado")
-        if completado is not None:
-            print("Completado:", completado)
-        else:
-            print("Completado: N/A")
+        print("")  
 
-        print("")
-
-    # Cerrar la conexión
     client.close()
 
-
-def mostrar_datos():
-    # Realizar la conexión a la base de datos
-    client = MongoClient("mongodb+srv://danielxp:maspormasDF1@cluster0.glu8e4r.mongodb.net/?retryWrites=true&w=majority")
-    db = client["danielxp88"]
-    comandas_collection = db["comandas"]
-
-    # Mostrar las opciones 
-    print("-------------------------------------------------")
-    print("1. Mostrar todas las comandas")
-    print("2. Mostrar comandas completadas")
-    print("3. Mostrar comandas no completadas")
-
-    opcion_filtrado = input("Seleccione una opción: ")
-
-    # Consultar y mostrar los datos según la opción
-    mostrar_datos_filtradas(opcion_filtrado)
-
-
 def borrar_datos():
-    # Realizar la conexión a la base de datos
     client = MongoClient("mongodb+srv://danielxp:maspormasDF1@cluster0.glu8e4r.mongodb.net/?retryWrites=true&w=majority")
     db = client["danielxp88"]
     comandas_collection = db["comandas"]
 
-    # Consultar y mostrar los datos de la colección "comandas"
-    print("-------------------------------------------------")
-    num_comanda = input("¿Qué número de comanda quieres borrar?: ")
+    print("-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-")
+    num_comanda = input("¿Cuál número de comanda quieres borrar?: ")
     bus = {'num_comanda': int(num_comanda)}
     comandas_collection.delete_one(bus)
     print("Registro borrado")
-
-    # Cerrar la conexión
     client.close()
-
-
-def actualizar_completado():
-    # Realizar la conexión a la base de datos
-    client = MongoClient("mongodb+srv://danielxp:maspormasDF1@cluster0.glu8e4r.mongodb.net/?retryWrites=true&w=majority")
-    db = client["danielxp88"]
-    comandas_collection = db["comandas"]
-
-    # Mostrar las comandas y solicitar el número de comanda a actualizar
-    print("-------------------------------------------------")
-    print("Comandas en la base de datos:")
-    for comanda in comandas_collection.find():
-        print("ID:", comanda["_id"])
-        print("Número de Comanda:", comanda["num_comanda"])
-
-        # Verificar si 'completado' está presente en el documento
-        completado = comanda.get("completado")
-        if completado is not None:
-            print("Completado:", completado)
-        else:
-            print("Completado: N/A")
-
-        print("")
-
-    num_comanda = input("Ingrese número de comanda a actualizar: ")
-
-    # Actualizar el campo "completado" de la comanda seleccionada
-    comanda = comandas_collection.find_one({"num_comanda": int(num_comanda)})
-    if comanda:
-        completado = comanda.get("completado")
-        if completado is not None:
-            comandas_collection.update_one({"num_comanda": int(num_comanda)}, {"$set": {"completado": not completado}})
-            print("Estado: Actualizado")
-        else:
-            print("No se encontró el campo 'completado' en la comanda.")
-    else:
-        print("No se encontró la comanda con el número proporcionado.")
-
-    # Cerrar la conexión
-    client.close()
-
 
 def menu():
     while True:
@@ -147,36 +81,46 @@ def menu():
         print("1. Agregar Comanda")
         print("2. Borrar Comanda")
         print("3. Consultar Comandas")
-        print("4. Actualizar Estado de Comanda")
-        print("5. Salir")
+        print("4. Salir")
 
         opcion = input("Seleccione una opción: ")
 
         if opcion == "1":
-            # Generar automáticamente el número de comanda incremental
-            hilo = threading.Thread(target=escribir_base_de_datos, args=(threading.current_thread().name, obtener_numero_comanda(), obtener_opcion("barbacoa"), obtener_opcion("quesadilla"), obtener_opcion("bebida"), obtener_opcion("consome")), name=f'HiloAgregarComanda')
+            cant_barbacoa = obtener_opcion("barbacoa")
+            cant_quesadilla = obtener_opcion("quesadilla")
+            cant_bebida = obtener_opcion("bebida")
+            cant_consome = obtener_opcion("consome")
+
+            hilo = threading.Thread(target=escribir_base_de_datos, args=(
+                threading.current_thread().name,
+                obtener_numero_comanda(),
+                cant_barbacoa,
+                cant_quesadilla,
+                cant_bebida,
+                cant_consome
+            ), name='HiloAgregarComanda')
+
             hilo.start()
             hilo.join()
+
         elif opcion == "2":
-            hilo = threading.Thread(target=borrar_datos, name=f'HiloBorrarComanda')
+            hilo = threading.Thread(target=borrar_datos, name='HiloBorrarComanda')
             hilo.start()
             hilo.join()
+
         elif opcion == "3":
-            hilo = threading.Thread(target=mostrar_datos, name=f'HiloConsultarComandas')
+            hilo = threading.Thread(target=mostrar_datos, name='HiloConsultarComandas')
             hilo.start()
             hilo.join()
+
         elif opcion == "4":
-            hilo = threading.Thread(target=actualizar_completado, name=f'HiloActualizarComanda')
-            hilo.start()
-            hilo.join()
-        elif opcion == "5":
-            print("¡Gracias por utilizarlo, adiós:)!")
+            print("Saliendo del programa. ¡Hasta luego!")
             break
+
         else:
             print("Opción no válida. Por favor, seleccione una opción válida.")
 
 def obtener_numero_comanda():
-    # Obtener el último número de comanda registrado y generar el siguiente
     client = MongoClient("mongodb+srv://danielxp:maspormasDF1@cluster0.glu8e4r.mongodb.net/?retryWrites=true&w=majority")
     db = client["danielxp88"]
     comandas_collection = db["comandas"]
@@ -192,7 +136,6 @@ def obtener_numero_comanda():
     return numero_comanda
 
 def obtener_opcion(opcion):
-    # Solicitar la cantidad de la opcion
     cantidad = input(f"Ingrese la cantidad de {opcion}: ")
     return int(cantidad)
 
