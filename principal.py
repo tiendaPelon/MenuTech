@@ -278,9 +278,9 @@ def menu():
         print("3. Consultar Comandas")
         print("4. Actualizar Estado de Comanda")
         print("5. Preparar pedidos")
-        print("6. Salir")
-
-        test_agregar_comanda_valida()
+        print("6. Prueba de Testeo")
+        print("7. Prueba de Round-Robin")
+        print("8. Salir")
         
         opcion = input("Seleccione una opción: ")
 
@@ -303,7 +303,16 @@ def menu():
             hilo.join()
         elif opcion == "5":
             mostrar_comandas_pendientes()
+
         elif opcion == "6":
+            test_agregar_comanda_valida()
+
+        elif opcion == "7":
+            hilo = threading.Thread(target=simular_round_robin, name="HiloRoundRobin")
+            hilo.start()
+            hilo.join()
+
+        elif opcion == "8":
             print("¡Gracias por utilizarlo, adiós:)!")
             break
         else:
@@ -339,8 +348,10 @@ def obtener_opcion(opcion):
             print("Por favor, ingrese un número válido.")
         
 def test_agregar_comanda_valida():
+    # Obtener automáticamente el número de comanda incremental
+    num_comanda = obtener_numero_comanda()
+    
     # Simular la entrada de valores válidos para una comanda
-    num_comanda = 10
     barbacoa = 2
     quesadilla = 3
     bebida = 1
@@ -360,7 +371,40 @@ def test_agregar_comanda_valida():
     client.close()
 
     assert comanda_agregada is not None, "La comanda no se ha agregado correctamente a la base de datos"
-    print("La comanda se ha agregado correctamente")
+    print(f"La comanda con ID {num_comanda} se ha agregado correctamente")
+
+def simular_round_robin():
+    while True:
+        # Realizar la conexión a la base de datos
+        client = MongoClient("mongodb+srv://danielxp:maspormasDF1@cluster0.glu8e4r.mongodb.net/?retryWrites=true&w=majority")
+        db = client["danielxp88"]
+        comandas_collection = db["comandas"]
+
+        # Obtener todas las comandas pendientes
+        comandas_pendientes = comandas_collection.find({"$or": [{"completado": False}, {"completado": {"$exists": False}}]})
+
+        # Iterar sobre cada comanda pendiente
+        for comanda in comandas_pendientes:
+            num_comanda = comanda["num_comanda"]
+            completado = comanda.get("completado", False)
+            tiempo_pedido = comanda.get("tiempo_pedido", 0)
+            
+            print(f"Comanda {num_comanda} - Completado: {completado}, Tiempo restante: {tiempo_pedido} segundos")
+
+            # Si la comanda no está completada y el tiempo restante es mayor a cero, actualizar el tiempo de preparación
+            if not completado and tiempo_pedido > 0:
+                # Simular intervalo de ejecución (quantum de 2 segundos)
+                time.sleep(2)
+
+                # Restar tiempo_pedido en la base de datos para la comanda actual
+                comandas_collection.update_one({"_id": comanda["_id"]}, {"$inc": {"tiempo_pedido": -2}})
+
+        # Cerrar la conexión
+        client.close()
+
+        # Simular el intervalo de tiempo entre iteraciones
+        time.sleep(1)
+
 
 
 if __name__ == "__main__":
