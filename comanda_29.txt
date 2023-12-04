@@ -1,0 +1,9 @@
+Número de Comanda: 29
+Completado: True
+Tiempo estimado de preparación: 0 segundos
+
+Detalles de la Comanda:
+Barbacoa: 1
+Quesadilla: 1
+Bebida: 1
+Consome: 1
