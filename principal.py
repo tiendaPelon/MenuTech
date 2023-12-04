@@ -279,8 +279,9 @@ def menu():
         print("4. Actualizar Estado de Comanda")
         print("5. Preparar pedidos")
         print("6. Prueba de Testeo")
-        print("7. Prueba de Round-Robin")
-        print("8. Salir")
+        print("7. Prueba de Comandas no completadas")
+        print("8. Prueba de Round-Robin")
+        print("9. Salir")
         
         opcion = input("Seleccione una opción: ")
 
@@ -306,13 +307,16 @@ def menu():
 
         elif opcion == "6":
             test_agregar_comanda_valida()
-
+        
         elif opcion == "7":
+            test_mostrar_comandas_no_completadas()
+
+        elif opcion == "8":
             hilo = threading.Thread(target=simular_round_robin, name="HiloRoundRobin")
             hilo.start()
             hilo.join()
 
-        elif opcion == "8":
+        elif opcion == "9":
             print("¡Gracias por utilizarlo, adiós:)!")
             break
         else:
@@ -405,6 +409,26 @@ def simular_round_robin():
         # Simular el intervalo de tiempo entre iteraciones
         time.sleep(1)
 
+def test_mostrar_comandas_no_completadas():
+    # Simular mostrar comandas no completadas desde la base de datos
+    print("-------------------------------------------------")
+    print("Test Mostrar Comandas no completadas:")
+    
+    # Llamar a la función que muestra comandas no completadas
+    mostrar_datos_filtradas("3")  # "3" corresponde a la opción de comandas no completadas
+    
+    # Verificar si se muestran correctamente las comandas no completadas
+    client = MongoClient("mongodb+srv://danielxp:maspormasDF1@cluster0.glu8e4r.mongodb.net/?retryWrites=true&w=majority")
+    db = client["danielxp88"]
+    comandas_collection = db["comandas"]
+    
+    # Verificar si se muestran solo comandas no completadas
+    comandas_no_completadas = comandas_collection.find({"$or": [{"completado": False}, {"completado": {"$exists": False}}]})
+    for comanda in comandas_no_completadas:
+        assert comanda.get("completado") in (False, None), "Se muestra una comanda completada en la lista de no completadas"
+
+    print("Prueba de mostrar comandas no completadas finalizada")
+    client.close()
 
 
 if __name__ == "__main__":
