@@ -15,13 +15,14 @@ def escribir_base_de_datos(hilo_id, num_comanda, barbacoa, quesadilla, bebida, c
         "quesadilla": quesadilla,
         "bebida": bebida,
         "consome": consome,
-        "completado": False  
+        "completado": False if "completado" not in locals() else completado
     }
     result = comandas_collection.insert_one(comanda)
     print(f"Hilo {hilo_id}: Comanda insertada con ID: {result.inserted_id}")
 
     # Cerrar la conexión
     client.close()
+
 
 def mostrar_datos():
     # Realizar la conexión a la base de datos
@@ -40,7 +41,7 @@ def mostrar_datos():
         print("Bebida:", comanda["bebida"])
         print("Consomé:", comanda["consome"])
 
-        # Verificar si 'completado' está presente 
+        # Verificar si 'completado' está presente en el documento
         completado = comanda.get("completado")
         if completado is not None:
             print("Completado:", completado)
@@ -61,7 +62,7 @@ def borrar_datos():
 
     # Consultar y mostrar los datos de la colección "comandas"
     print("-----------------")
-    num_comanda = input("¿Cuál número de comanda quieres borrar?: ")
+    num_comanda = input("¿Qué número de comanda quieres borrar?: ")
     bus = {'num_comanda': int(num_comanda)}
     comandas_collection.delete_one(bus)
     print("Registro borrado")
@@ -75,14 +76,14 @@ def actualizar_completado():
     db = client["danielxp88"]
     comandas_collection = db["comandas"]
 
-    # Mostrar las comandas y solicitar el ID de la comanda a actualizar
+    # Mostrar las comandas y solicitar el número de comanda a actualizar
     print("-----------------")
     print("Comandas en la base de datos:")
     for comanda in comandas_collection.find():
         print("ID:", comanda["_id"])
         print("Número de Comanda:", comanda["num_comanda"])
 
-        # Verificar si se encuentra 'completado' 
+        # Verificar si 'completado' está presente en el documento
         completado = comanda.get("completado")
         if completado is not None:
             print("Completado:", completado)
@@ -91,16 +92,22 @@ def actualizar_completado():
 
         print("")
 
-    comanda_id = input("Ingrese el ID de la comanda que desea actualizar: ")
-    completado = input("¿La comanda está completada? (Sí/No): ").lower() == "sí"
+    num_comanda = input("Ingrese número de comanda a actualizar: ")
 
     # Actualizar el campo "completado" de la comanda seleccionada
-    comandas_collection.update_one({"_id": ObjectId(comanda_id)}, {"$set": {"completado": completado}})
-    print("Se ha actualizado")
+    comanda = comandas_collection.find_one({"num_comanda": int(num_comanda)})
+    if comanda:
+        completado = comanda.get("completado")
+        if completado is not None:
+            comandas_collection.update_one({"num_comanda": int(num_comanda)}, {"$set": {"completado": not completado}})
+            print("Estado: Actualizado")
+        else:
+            print("No se encontró el campo 'completado' en la comanda.")
+    else:
+        print("No se encontró la comanda con el número proporcionado.")
 
     # Cerrar la conexión
     client.close()
-
 
 def menu():
     while True:
