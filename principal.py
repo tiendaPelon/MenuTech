@@ -24,16 +24,28 @@ def escribir_base_de_datos(hilo_id, num_comanda, barbacoa, quesadilla, bebida, c
     client.close()
 
 
-def mostrar_datos():
+def mostrar_datos_filtradas(opcion_filtrado):
     # Realizar la conexión a la base de datos
     client = MongoClient("mongodb+srv://danielxp:maspormasDF1@cluster0.glu8e4r.mongodb.net/?retryWrites=true&w=majority")
     db = client["danielxp88"]
     comandas_collection = db["comandas"]
 
-    # Consultar y mostrar los datos de la colección "comandas"
-    print("-----------------")
+    # Consultar y mostrar los datos de la colección "comandas" según la opción de filtrado
+    print("-------------------------------------------------")
     print("Datos en la base de datos:")
-    for comanda in comandas_collection.find():
+
+    if opcion_filtrado == "1":
+        comandas = comandas_collection.find()
+    elif opcion_filtrado == "2":
+        comandas = comandas_collection.find({"completado": True})
+    elif opcion_filtrado == "3":
+        comandas = comandas_collection.find({"$or": [{"completado": False}, {"completado": {"$exists": False}}]})
+    else:
+        print("Opción no válida.")
+        client.close()
+        return
+
+    for comanda in comandas:
         print("ID:", comanda["_id"])
         print("Número de Comanda:", comanda["num_comanda"])
         print("Barbacoa:", comanda["barbacoa"])
@@ -54,6 +66,24 @@ def mostrar_datos():
     client.close()
 
 
+def mostrar_datos():
+    # Realizar la conexión a la base de datos
+    client = MongoClient("mongodb+srv://danielxp:maspormasDF1@cluster0.glu8e4r.mongodb.net/?retryWrites=true&w=majority")
+    db = client["danielxp88"]
+    comandas_collection = db["comandas"]
+
+    # Mostrar las opciones 
+    print("-------------------------------------------------")
+    print("1. Mostrar todas las comandas")
+    print("2. Mostrar comandas completadas")
+    print("3. Mostrar comandas no completadas")
+
+    opcion_filtrado = input("Seleccione una opción: ")
+
+    # Consultar y mostrar los datos según la opción
+    mostrar_datos_filtradas(opcion_filtrado)
+
+
 def borrar_datos():
     # Realizar la conexión a la base de datos
     client = MongoClient("mongodb+srv://danielxp:maspormasDF1@cluster0.glu8e4r.mongodb.net/?retryWrites=true&w=majority")
@@ -61,7 +91,7 @@ def borrar_datos():
     comandas_collection = db["comandas"]
 
     # Consultar y mostrar los datos de la colección "comandas"
-    print("-----------------")
+    print("-------------------------------------------------")
     num_comanda = input("¿Qué número de comanda quieres borrar?: ")
     bus = {'num_comanda': int(num_comanda)}
     comandas_collection.delete_one(bus)
@@ -70,6 +100,7 @@ def borrar_datos():
     # Cerrar la conexión
     client.close()
 
+
 def actualizar_completado():
     # Realizar la conexión a la base de datos
     client = MongoClient("mongodb+srv://danielxp:maspormasDF1@cluster0.glu8e4r.mongodb.net/?retryWrites=true&w=majority")
@@ -77,7 +108,7 @@ def actualizar_completado():
     comandas_collection = db["comandas"]
 
     # Mostrar las comandas y solicitar el número de comanda a actualizar
-    print("-----------------")
+    print("-------------------------------------------------")
     print("Comandas en la base de datos:")
     for comanda in comandas_collection.find():
         print("ID:", comanda["_id"])
@@ -108,6 +139,7 @@ def actualizar_completado():
 
     # Cerrar la conexión
     client.close()
+
 
 def menu():
     while True:
