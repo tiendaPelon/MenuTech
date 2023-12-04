@@ -19,17 +19,23 @@ def obtener_tiempo_total(orden):
 
 
 def escribir_base_de_datos(hilo_id, num_comanda, barbacoa, quesadilla, bebida, consome):
+    # Validar que las cantidades sean números
+    if not all(isinstance(cantidad, int) for cantidad in [num_comanda, barbacoa, quesadilla, bebida, consome]):
+        print("Error: Las cantidades deben ser números enteros.")
+        return
+
     # Realizar la conexión a la base de datos
-   
     tiempo_pedido = obtener_tiempo_total({
         "barbacoa": barbacoa,
         "quesadilla": quesadilla,
         "bebida": bebida,
         "consome": consome
     })
+    
     client = MongoClient("mongodb+srv://danielxp:maspormasDF1@cluster0.glu8e4r.mongodb.net/?retryWrites=true&w=majority")
     db = client["danielxp88"]
     comandas_collection = db["comandas"]
+
     # Insertar el valor en la base de datos
     comanda = {
         "num_comanda": num_comanda,
@@ -40,6 +46,7 @@ def escribir_base_de_datos(hilo_id, num_comanda, barbacoa, quesadilla, bebida, c
         "completado": False if "completado" not in locals() else completado,
         "tiempo_pedido": tiempo_pedido
     }
+
     result = comandas_collection.insert_one(comanda)
     print(f"Hilo {hilo_id}: Comanda insertada con ID: {result.inserted_id}")
     print(f"El tiempo estimado de preparación para la Comanda {num_comanda} es de {tiempo_pedido} segundos.")
@@ -317,9 +324,17 @@ def obtener_numero_comanda():
     return numero_comanda
 
 def obtener_opcion(opcion):
-    # Solicitar la cantidad de la opcion
-    cantidad = input(f"Ingrese la cantidad de {opcion}: ")
-    return int(cantidad)
+    while True:
+        cantidad = input(f"Ingrese la cantidad de {opcion}: ")
+        
+        try:
+            cantidad = int(cantidad)
+            if cantidad >= 0:
+                return cantidad
+            else:
+                print("Por favor, ingrese un número mayor o igual a 0.")
+        except ValueError:
+            print("Por favor, ingrese un número válido.")
 
 if __name__ == "__main__":
     menu()
