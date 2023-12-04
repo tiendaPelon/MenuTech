@@ -62,7 +62,9 @@ def mostrar_datos_filtradas(opcion_filtrado):
         print("ID:", comanda["_id"])
         print("Número de Comanda:", comanda["num_comanda"])
         print("Barbacoa:", comanda["barbacoa"])
-        # ... (Resto de las líneas de impresión de datos)
+        print("Quesadilla:", comanda["quesadilla"])
+        print("Bebida:", comanda["bebida"])
+        print("Consome:", comanda["consome"])
         print("")  # Agregar una línea en blanco entre registros
 
     client.close()
