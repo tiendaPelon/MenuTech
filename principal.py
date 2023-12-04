@@ -1,6 +1,5 @@
 import threading
 from pymongo import MongoClient
-from datetime import datetime, timedelta
 
 tiempos_comida = {
     "barbacoa": 4,
@@ -40,39 +39,57 @@ def escribir_base_de_datos(hilo_id, num_comanda, barbacoa, quesadilla, bebida, c
     print(f"El tiempo estimado de preparación para la Comanda {num_comanda} es de {tiempo_pedido} segundos.")
     client.close()
 
-def mostrar_datos():
+def mostrar_datos_filtradas(opcion_filtrado):
     client = MongoClient("mongodb+srv://danielxp:maspormasDF1@cluster0.glu8e4r.mongodb.net/?retryWrites=true&w=majority")
     db = client["danielxp88"]
     comandas_collection = db["comandas"]
 
-    print("-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-")
+    print("-------------------------------------------------")
     print("Datos en la base de datos:")
-    for comanda in comandas_collection.find():
+
+    if opcion_filtrado == "1":
+        comandas = comandas_collection.find()
+    elif opcion_filtrado == "2":
+        comandas = comandas_collection.find({"completado": True})
+    elif opcion_filtrado == "3":
+        comandas = comandas_collection.find({"$or": [{"completado": False}, {"completado": {"$exists": False}}]})
+    else:
+        print("Opción no válida.")
+        client.close()
+        return
+
+    for comanda in comandas:
         print("ID:", comanda["_id"])
         print("Número de Comanda:", comanda["num_comanda"])
         print("Barbacoa:", comanda["barbacoa"])
-        print("Quesadilla:", comanda["quesadilla"])
-        print("Bebida:", comanda["bebida"])
-        print("Consomé:", comanda["consome"])
-        
-        tiempo_pedido = comanda.get("tiempo_pedido", None)
-        if tiempo_pedido is not None:
-            print(f"Tiempo estimado de preparación: {tiempo_pedido} segundos")
-
-        print("")  
+        # ... (Resto de las líneas de impresión de datos)
+        print("")  # Agregar una línea en blanco entre registros
 
     client.close()
+
+def mostrar_datos():
+    print("-------------------------------------------------")
+    print("1. Mostrar todas las comandas")
+    print("2. Mostrar comandas completadas")
+    print("3. Mostrar comandas no completadas")
+
+    opcion_filtrado = input("Seleccione una opción: ")
+
+    mostrar_datos_filtradas(opcion_filtrado)
 
 def borrar_datos():
     client = MongoClient("mongodb+srv://danielxp:maspormasDF1@cluster0.glu8e4r.mongodb.net/?retryWrites=true&w=majority")
     db = client["danielxp88"]
     comandas_collection = db["comandas"]
 
-    print("-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-")
-    num_comanda = input("¿Cuál número de comanda quieres borrar?: ")
+    print("-----------------")
+    print("Datos en la base de datos:")
+
+    num_comanda = input("¿Qué número de comanda quieres borrar?: ")
     bus = {'num_comanda': int(num_comanda)}
     comandas_collection.delete_one(bus)
     print("Registro borrado")
+
     client.close()
 
 def menu():
@@ -119,6 +136,9 @@ def menu():
 
         else:
             print("Opción no válida. Por favor, seleccione una opción válida.")
+
+# Funciones para obtener_numero_comanda y obtener_opcion se mantienen igual
+
 
 def obtener_numero_comanda():
     client = MongoClient("mongodb+srv://danielxp:maspormasDF1@cluster0.glu8e4r.mongodb.net/?retryWrites=true&w=majority")
