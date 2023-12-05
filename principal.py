@@ -1,3 +1,4 @@
+from http import client
 import threading
 import time
 from pymongo import MongoClient
@@ -280,8 +281,9 @@ def menu():
         print("5. Preparar pedidos")
         print("6. Prueba de Testeo")
         print("7. Prueba de Comandas no completadas")
-        print("8. Prueba de Round-Robin")
-        print("9. Salir")
+        print("8. Prueba de tiempos de comandas")
+        print("9. Prueba de Round-Robin")
+        print("10. Salir")
         
         opcion = input("Seleccione una opción: ")
 
@@ -312,6 +314,9 @@ def menu():
             test_mostrar_comandas_no_completadas()
 
         elif opcion == "8":
+            test_calculo_tiempo_preparacion()
+
+        elif opcion == "9":
             hilo = threading.Thread(target=simular_round_robin, name="HiloRoundRobin")
             hilo.start()
             hilo.join()
@@ -429,6 +434,28 @@ def test_mostrar_comandas_no_completadas():
 
     print("Prueba de mostrar comandas no completadas finalizada")
     client.close()
+
+def test_calculo_tiempo_preparacion():
+    # Definir valores de prueba
+    cantidad_barbacoa = 4  # 4 barbacoas
+    tiempo_individual_barbacoa = tiempos_comida["barbacoa"]  # Obtener el tiempo individual de preparación de barbacoa
+
+    # Calcular el tiempo total esperado
+    tiempo_esperado = cantidad_barbacoa * tiempo_individual_barbacoa
+
+    # Calcular el tiempo total según la función obtener_tiempo_total
+    orden = {
+        "barbacoa": cantidad_barbacoa,
+        "quesadilla": 0,
+        "bebida": 0,
+        "consome": 0
+    }
+    tiempo_calculado = obtener_tiempo_total(orden)
+
+    # Verificar si el tiempo calculado coincide con el tiempo esperado
+    assert tiempo_calculado == tiempo_esperado, f"Error en el cálculo del tiempo. Se esperaban {tiempo_esperado} segundos, se obtuvieron {tiempo_calculado} segundos."
+
+    print(f"El cálculo del tiempo de preparación para {cantidad_barbacoa} barbacoas fue exitoso.")
 
 
 if __name__ == "__main__":
